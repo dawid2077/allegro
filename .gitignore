@@ -25,6 +25,11 @@ test-results/
 # OS
 .DS_Store
 
+# Nix
+result
+result-*
+flake.lock
+
 # Editor
 .idea/
 .vscode/
