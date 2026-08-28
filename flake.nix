@@ -18,24 +18,22 @@
           buildInputs = with pkgs; [
             python
             uv
-            libnss3
-            libnspr4
+            nss
+            nspr
             atk
             at-spi2-core
-            libcups
+            cups
             libdrm
             libxkbcommon
-            libxcomposite
-            libxdamage
-            libxfixes
-            libxrandr
+            libXcomposite
+            libXdamage
+            libXfixes
+            libXrandr
             mesa
             alsa-lib
             libxshmfence
-            libxss
-            libgconf
-            nss
-            nspr
+            libXScrnSaver
+            gconf
             dbus
             fontconfig
             freetype

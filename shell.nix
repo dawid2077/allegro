@@ -9,26 +9,23 @@ pkgs.mkShell {
   buildInputs = with pkgs; [
     python
     uv
-    # System dependencies for Playwright/Chromium (these are the actual deps)
-    libnss3
-    libnspr4
-    atk
-    at-spi2-core
-    libcups
-    libdrm
-    libxkbcommon
-    libxcomposite
-    libxdamage
-    libxfixes
-    libxrandr
-    mesa
-    alsa-lib
-    # Additional common Playwright deps
-    libxshmfence
-    libxss
-    libgconf
+    # System dependencies for Playwright/Chromium (nixpkgs attribute names)
     nss
     nspr
+    atk
+    at-spi2-core
+    cups
+    libdrm
+    libxkbcommon
+    libXcomposite
+    libXdamage
+    libXfixes
+    libXrandr
+    mesa
+    alsa-lib
+    libxshmfence
+    libXScrnSaver
+    gconf
     dbus
     fontconfig
     freetype
