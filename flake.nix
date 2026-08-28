@@ -25,15 +25,15 @@
 
             if [ ! -d ".venv" ] || [ ! -f ".venv/pyvenv.cfg" ]; then
               echo "Creating virtual environment and installing dependencies..."
-              uv venv --python $(which python3.11) .venv
+              python -m venv .venv
               source .venv/bin/activate
               uv pip install -e ".[dev]"
-              playwright install chromium
+              .venv/bin/playwright install chromium
             else
               source .venv/bin/activate
             fi
 
-            echo "allegro-evaluate dev shell ready (uv + python only)"
+            echo "allegro-evaluate dev shell ready"
             echo "Run: allegro-evaluate --help"
           '';
         };

@@ -14,18 +14,18 @@ pkgs.mkShell {
   shellHook = ''
     export UV_SYSTEM_PYTHON=1
 
-    # Auto-install Python deps on shell enter if not already done
+    # Use python -m venv instead of uv venv to avoid nix store immutability issues
     if [ ! -d ".venv" ] || [ ! -f ".venv/pyvenv.cfg" ]; then
       echo "Creating virtual environment and installing dependencies..."
-      uv venv --python $(which python3.11) .venv
+      python -m venv .venv
       source .venv/bin/activate
       uv pip install -e ".[dev]"
-      playwright install chromium
+      .venv/bin/playwright install chromium
     else
       source .venv/bin/activate
     fi
 
-    echo "allegro-evaluate dev shell ready (uv + python only)"
+    echo "allegro-evaluate dev shell ready"
     echo "Run: allegro-evaluate --help"
   '';
 }
