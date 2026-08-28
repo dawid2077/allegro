@@ -12,12 +12,37 @@
         pkgs = nixpkgs.legacyPackages.${system};
         python = pkgs.python311;
         uv = pkgs.uv;
+        xorg = pkgs.xorg;
       in {
         devShells.default = pkgs.mkShell {
           name = "allegro-evaluate-dev";
           buildInputs = with pkgs; [
             python
             uv
+            gcc
+            libstdc++
+            nss
+            nspr
+            atk
+            at-spi2-core
+            cups
+            libdrm
+            libxkbcommon
+            xorg.libXcomposite
+            xorg.libXdamage
+            xorg.libXfixes
+            xorg.libXrandr
+            xorg.libXScrnSaver
+            xorg.libXcursor
+            xorg.libXi
+            xorg.libXtst
+            mesa
+            alsa-lib
+            libxshmfence
+            dbus
+            fontconfig
+            freetype
+            harfbuzz
           ];
 
           shellHook = ''
