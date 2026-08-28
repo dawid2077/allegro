@@ -29,7 +29,6 @@ pkgs.mkShell {
     mesa
     alsa-lib
     libxshmfence
-    gconf
     dbus
     fontconfig
     freetype
