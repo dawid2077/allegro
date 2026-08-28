@@ -12,6 +12,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
         python = pkgs.python311;
         uv = pkgs.uv;
+        xorg = pkgs.xorg;
       in {
         devShells.default = pkgs.mkShell {
           name = "allegro-evaluate-dev";
@@ -25,14 +26,17 @@
             cups
             libdrm
             libxkbcommon
-            libXcomposite
-            libXdamage
-            libXfixes
-            libXrandr
+            xorg.libXcomposite
+            xorg.libXdamage
+            xorg.libXfixes
+            xorg.libXrandr
+            xorg.libXScrnSaver
+            xorg.libXcursor
+            xorg.libXi
+            xorg.libXtst
             mesa
             alsa-lib
             libxshmfence
-            libXScrnSaver
             gconf
             dbus
             fontconfig

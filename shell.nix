@@ -3,13 +3,14 @@
 let
   python = pkgs.python311;
   uv = pkgs.uv;
+  xorg = pkgs.xorg;
 in
 pkgs.mkShell {
   name = "allegro-evaluate-dev";
   buildInputs = with pkgs; [
     python
     uv
-    # System dependencies for Playwright/Chromium (nixpkgs attribute names)
+    # System dependencies for Playwright/Chromium via xorg package set
     nss
     nspr
     atk
@@ -17,14 +18,17 @@ pkgs.mkShell {
     cups
     libdrm
     libxkbcommon
-    libXcomposite
-    libXdamage
-    libXfixes
-    libXrandr
+    xorg.libXcomposite
+    xorg.libXdamage
+    xorg.libXfixes
+    xorg.libXrandr
+    xorg.libXScrnSaver
+    xorg.libXcursor
+    xorg.libXi
+    xorg.libXtst
     mesa
     alsa-lib
     libxshmfence
-    libXScrnSaver
     gconf
     dbus
     fontconfig
