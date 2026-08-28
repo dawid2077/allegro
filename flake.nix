@@ -12,39 +12,12 @@
         pkgs = nixpkgs.legacyPackages.${system};
         python = pkgs.python311;
         uv = pkgs.uv;
-        xorg = pkgs.xorg;
       in {
         devShells.default = pkgs.mkShell {
           name = "allegro-evaluate-dev";
           buildInputs = with pkgs; [
             python
             uv
-            nss
-            nspr
-            atk
-            at-spi2-core
-            cups
-            libdrm
-            libxkbcommon
-            xorg.libXcomposite
-            xorg.libXdamage
-            xorg.libXfixes
-            xorg.libXrandr
-            xorg.libXScrnSaver
-            xorg.libXcursor
-            xorg.libXi
-            xorg.libXtst
-            mesa
-            alsa-lib
-            libxshmfence
-            dbus
-            fontconfig
-            freetype
-            harfbuzz
-            gcc
-            make
-            cmake
-            pkg-config
           ];
 
           shellHook = ''
@@ -55,12 +28,12 @@
               uv venv --python $(which python3.11) .venv
               source .venv/bin/activate
               uv pip install -e ".[dev]"
-              playwright install chromium --with-deps
+              playwright install chromium
             else
               source .venv/bin/activate
             fi
 
-            echo "allegro-evaluate dev shell ready"
+            echo "allegro-evaluate dev shell ready (uv + python only)"
             echo "Run: allegro-evaluate --help"
           '';
         };
