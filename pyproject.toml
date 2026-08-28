@@ -53,7 +53,8 @@ exclude = [".venv", "docs"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
-ignore = ["E501"]
+# B008: Typer/Click option declarations call typer.Option(...) in argument defaults.
+ignore = ["E501", "B008"]
 
 [tool.coverage.run]
 source = ["allegro_evaluate"]
