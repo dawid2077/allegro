@@ -11,6 +11,13 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+class ChatMessage(BaseModel):
+    """A single chat-completion message."""
+
+    role: Literal["system", "user", "assistant"]
+    content: str
+
+
 class Listing(BaseModel):
     """A single Allegro listing (as scraped from the search results page)."""
 

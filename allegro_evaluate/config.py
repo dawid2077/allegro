@@ -9,11 +9,11 @@ Settings are resolved in this order (lowest to highest precedence):
 
 from __future__ import annotations
 
+import tomllib
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal, cast
 
-import tomllib
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
