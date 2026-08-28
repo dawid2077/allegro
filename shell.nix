@@ -1,42 +1,47 @@
 { pkgs ? import <nixpkgs> {} }:
 
 let
-  # Use a stable nixpkgs version for reproducibility
   python = pkgs.python311;
   uv = pkgs.uv;
-  playwright-deps = pkgs.playwright-deps;
 in
 pkgs.mkShell {
   name = "allegro-evaluate-dev";
   buildInputs = with pkgs; [
     python
     uv
-    playwright-deps
-    # System dependencies for Playwright/Chromium
-    pkgs.libnss3
-    pkgs.libnspr4
-    pkgs.atk
-    pkgs.at-spi2-core
-    pkgs.libcups
-    pkgs.libdrm
-    pkgs.libxkbcommon
-    pkgs.libxcomposite
-    pkgs.libxdamage
-    pkgs.libxfixes
-    pkgs.libxrandr
-    pkgs.mesa
-    pkgs.alsa-lib
+    # System dependencies for Playwright/Chromium (these are the actual deps)
+    libnss3
+    libnspr4
+    atk
+    at-spi2-core
+    libcups
+    libdrm
+    libxkbcommon
+    libxcomposite
+    libxdamage
+    libxfixes
+    libxrandr
+    mesa
+    alsa-lib
+    # Additional common Playwright deps
+    libxshmfence
+    libxss
+    libgconf
+    nss
+    nspr
+    dbus
+    fontconfig
+    freetype
+    harfbuzz
     # Build tools
-    pkgs.gcc
-    pkgs.make
-    pkgs.cmake
-    pkgs.pkg-config
+    gcc
+    make
+    cmake
+    pkg-config
   ];
 
   shellHook = ''
     export UV_SYSTEM_PYTHON=1
-    export PLAYWRIGHT_BROWSERS_PATH="${playwright-deps}/lib/playwright"
-    export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="${playwright-deps}/lib/playwright/chromium-*/chrome-linux/chrome"
 
     # Auto-install Python deps on shell enter if not already done
     if [ ! -d ".venv" ] || [ ! -f ".venv/pyvenv.cfg" ]; then
