@@ -37,6 +37,7 @@ dev = [
 ]
 
 [project.scripts]
+allegro = "allegro_evaluate.cli:app"
 allegro-evaluate = "allegro_evaluate.cli:app"
 
 [tool.setuptools.packages.find]
