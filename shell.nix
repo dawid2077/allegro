@@ -42,10 +42,10 @@ pkgs.mkShell {
     # Set library path so venv can find nix store libs (crucial for Playwright)
     export LD_LIBRARY_PATH="${pkgs.gcc}/lib:${pkgs.mesa}/lib:${pkgs.alsa-lib}/lib:${pkgs.libxshmfence}/lib:${pkgs.libdrm}/lib:${pkgs.libxkbcommon}/lib:${pkgs.xorg.libXcomposite}/lib:${pkgs.xorg.libXdamage}/lib:${pkgs.xorg.libXfixes}/lib:${pkgs.xorg.libXrandr}/lib:${pkgs.xorg.libXScrnSaver}/lib:${pkgs.xorg.libXcursor}/lib:${pkgs.xorg.libXi}/lib:${pkgs.xorg.libXtst}/lib:${pkgs.nss}/lib:${pkgs.nspr}/lib:${pkgs.atk}/lib:${pkgs.at-spi2-core}/lib:${pkgs.cups}/lib:${pkgs.dbus}/lib:${pkgs.fontconfig}/lib:${pkgs.freetype}/lib:${pkgs.harfbuzz}/lib:$LD_LIBRARY_PATH"
 
-    # Use uv for everything (venv, install, playwright)
+    # Use python -m venv with --system-site-packages for Nix-managed Python
     if [ ! -d ".venv" ] || [ ! -f ".venv/bin/python" ]; then
-      echo "Creating virtual environment with uv..."
-      uv venv .venv
+      echo "Creating virtual environment..."
+      python -m venv .venv --system-site-packages
       source .venv/bin/activate
       echo "Installing Python dependencies..."
       uv pip install -e ".[dev]"
