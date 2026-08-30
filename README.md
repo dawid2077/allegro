@@ -50,13 +50,12 @@ allegro-evaluate search "laptop 16GB RAM pod 3000 zł"
 ### Search with Allegro REST API (New Feature)
 
 ```bash
-allegro-evaluate api-search "laptop 16GB RAM pod vesta 3000 zł" --limit 50 --require "black color" --exclude "lenovo"
+allegro-evaluate api-search "laptop 16GB RAM pod 3000 zł" --limit 50 --description "black color, not lenovo"
 ```
 
 #### Options:
 - `--limit, -n`: Number of listings to fetch from Allegro API (default: 30, max: 1000)
-- `--require, -r`: Must‑have features (repeatable). E.g., `-r "black color" -r "not lenovo"`
-- `--exclude, -e`: Must‑not‑have features (repeatable). E.g., `-e "refurbished" -e "used"`
+- `--description, -d`: Additional natural-language constraints to guide evaluation (repeatable). E.g., `-d "black color, not lenovo"` or `-d "must have 16GB RAM"`. Can be specified multiple times.
 - `--max-results, -m`: Number of best matches to return (default: TOP_K)
 - `--min-score`: Minimum match score (0‑100) to display
 - `--output-format, -f`: Output format: `table`, `json`, or `markdown`
@@ -88,13 +87,16 @@ The evaluation runs in two stages:
 
 ```bash
 # Search for laptops under 3000 PLN, black color, not Lenovo
-allegro-evaluate api-search "laptop pod 3000 zł" --require "black color" --exclude "lenovo" --limit 100
+allegro-evaluate api-search "laptop pod 3000 zł" --description "black color, not lenovo" --limit 100
 
 # Get top 5 matches with minimum score 70
 allegro-evaluate api-search "gaming laptop rtx 4060" --max-results 5 --min-score 70
 
 # JSON output for scripting
 allegro-evaluate api-search "mechanical keyboard" --output-format json
+
+# Multiple description constraints
+allegro-evaluate api-search "laptop" --description "black color" --description "not lenovo" --description "must have 16GB RAM"
 ```
 
 ## Configuration File (TOML)

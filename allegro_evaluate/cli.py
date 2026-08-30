@@ -52,11 +52,13 @@ def api_search(
     limit: int = typer.Option(
         30, "--limit", "-n", min=1, max=1000, help="Number of listings to fetch from Allegro API (default: 30)."
     ),
-    require: list[str] = typer.Option(
-        [], "--require", "-r", help="Must-have features (repeatable). E.g. -r 'black color' -r 'not lenovo'."
-    ),
-    exclude: list[str] = typer.Option(
-        [], "--exclude", "-e", help="Must-not-have features (repeatable). E.g. -e 'refurbished' -e 'used'."
+    description: list[str] = typer.Option(
+        [],
+        "--description",
+        "-d",
+        help="Additional natural-language constraints to guide evaluation. "
+        "E.g. '-d \"black color, not lenovo\"' or '-d \"must have 16GB RAM\"'. "
+        "Can be specified multiple times.",
     ),
     max_results: int | None = typer.Option(
         None, "--max-results", "-m", min=1, help="Number of best matches to return (default: TOP_K)."
@@ -103,13 +105,15 @@ def api_search(
         typer.secho(f"LLM unavailable: {exc}", err=True, fg="red")
         raise typer.Exit(1) from exc
 
-    # Inject CLI-provided requirements/exclusions into criteria
-    if require:
-        criteria.must_have.extend(require)
-        log.info("cli_requirements_added", require=require)
-    if exclude:
-        criteria.excluded.extend(exclude)
-        log.info("cli_exclusions_added", exclude=exclude)
+    # Inject CLI-provided description constraints into criteria
+    if description:
+        # Combine all descriptions into one string for the parser
+        combined_desc = "; ".join(description)
+        log.info("cli_description_added", description=combined_desc)
+        # Re-parse the query with the additional description appended
+        # This lets the LLM naturally understand both must-have and must-not-have
+        enhanced_query = f"{query}. {combined_desc}"
+        criteria = parser.parse(enhanced_query)
 
     log.info("criteria_parsed", criteria=criteria.model_dump())
 
