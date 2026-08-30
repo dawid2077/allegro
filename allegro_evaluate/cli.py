@@ -3,7 +3,8 @@
 Commands
 --------
 - ``search <query>`` — run the full pipeline (parse → scrape → evaluate).
-- ``config show`` — print the resolved settings (API key masked).
+- ``api-search <query>`` — run the pipeline using Allegro REST API (parse → API → evaluate).
+- ``config show`` — print the resolved settings (API keys masked).
 - ``config setup`` — interactively save ``OPENROUTER_API_KEY`` to ``.env``.
 - ``config set-model`` — change ``PRIMARY_MODEL`` in ``.env``.
 
@@ -19,13 +20,13 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from allegro_evaluate.api import AllegroAPIClient, AllegroAPIError
 from allegro_evaluate.config import OutputFormat, Settings, load_settings_from_file
 from allegro_evaluate.llm.client import LLMError, OpenRouterClient
 from allegro_evaluate.llm.evaluator import ListingEvaluator
 from allegro_evaluate.llm.parser import QueryParser
 from allegro_evaluate.logging import configure_logging, get_logger
 from allegro_evaluate.models import SearchReport
-from allegro_evaluate.scraper import AllegroScraper, ScraperError
 
 app = typer.Typer(
     help="Search Allegro with natural language and evaluate listings with LLMs.",
@@ -39,7 +40,110 @@ config_app = typer.Typer(
 app.add_typer(config_app, name="config")
 
 
-# --------------------------------------------------------------------------- search
+# --------------------------------------------------------------------------- api-search
+
+
+@app.command()
+def api_search(
+    query: str = typer.Argument(
+        ...,
+        help="Natural-language product query, e.g. 'laptop 16GB RAM pod 3000 zł'.",
+    ),
+    limit: int = typer.Option(
+        30, "--limit", "-n", min=1, max=1000, help="Number of listings to fetch from Allegro API (default: 30)."
+    ),
+    require: list[str] = typer.Option(
+        [], "--require", "-r", help="Must-have features (repeatable). E.g. -r 'black color' -r 'not lenovo'."
+    ),
+    exclude: list[str] = typer.Option(
+        [], "--exclude", "-e", help="Must-not-have features (repeatable). E.g. -e 'refurbished' -e 'used'."
+    ),
+    max_results: int | None = typer.Option(
+        None, "--max-results", "-m", min=1, help="Number of best matches to return (default: TOP_K)."
+    ),
+    min_score: float | None = typer.Option(
+        None, "--min-score", min=0, max=100, help="Only show results at or above this score."
+    ),
+    output_format: OutputFormat | None = typer.Option(
+        None, "--output-format", "-f", help="Output format: table, json or markdown."
+    ),
+    config_file: Path | None = typer.Option(
+        None, "--config", help="Path to an optional TOML config file."
+    ),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable DEBUG logging."),
+) -> None:
+    """Search Allegro via REST API, evaluate the best matches and print a report."""
+    settings = _load_settings(config_file)
+    if max_results is not None:
+        settings.top_k = max_results
+    configure_logging(level="DEBUG" if verbose else settings.log_level, json=settings.log_json)
+    log = get_logger("allegro_evaluate.cli")
+
+    if not settings.openrouter_api_key:
+        typer.secho(
+            "OPENROUTER_API_KEY is not set. Run 'allegro-evaluate config setup' to configure it.",
+            err=True,
+            fg="red",
+        )
+        raise typer.Exit(1)
+
+    if not settings.allegro_client_id or not settings.allegro_client_secret:
+        typer.secho(
+            "ALLEGRO_CLIENT_ID and ALLEGRO_CLIENT_SECRET must be set in .env or environment.",
+            err=True,
+            fg="red",
+        )
+        raise typer.Exit(1)
+
+    try:
+        client = OpenRouterClient(settings, logger=log)
+        parser = QueryParser(client, settings, logger=log)
+        criteria = parser.parse(query)
+    except LLMError as exc:
+        typer.secho(f"LLM unavailable: {exc}", err=True, fg="red")
+        raise typer.Exit(1) from exc
+
+    # Inject CLI-provided requirements/exclusions into criteria
+    if require:
+        criteria.must_have.extend(require)
+        log.info("cli_requirements_added", require=require)
+    if exclude:
+        criteria.excluded.extend(exclude)
+        log.info("cli_exclusions_added", exclude=exclude)
+
+    log.info("criteria_parsed", criteria=criteria.model_dump())
+
+    try:
+        api_client = AllegroAPIClient(
+            client_id=settings.allegro_client_id,
+            client_secret=settings.allegro_client_secret,
+            logger=log,
+        )
+        listings = api_client.search(phrase=criteria.query, limit=limit)
+    except AllegroAPIError as exc:
+        typer.secho(f"Allegro API error: {exc}", err=True, fg="red")
+        raise typer.Exit(1) from exc
+
+    if not listings:
+        typer.secho("No listings found on Allegro for this query.", fg="yellow")
+        raise typer.Exit(0)
+
+    evaluator = ListingEvaluator(client, settings, logger=log)
+    results = evaluator.evaluate(listings, criteria)
+    if min_score is not None:
+        results = [result for result in results if result.score >= min_score]
+
+    report = SearchReport(
+        criteria=criteria,
+        query=query,
+        total_listings=len(listings),
+        evaluated=results,
+        models_used=evaluator.models_used,
+    )
+    render_report(report, output_format or settings.output_format)
+
+
+# --------------------------------------------------------------------------- search (legacy scraping)
 
 
 @app.command()
@@ -62,7 +166,7 @@ def search(
     ),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable DEBUG logging."),
 ) -> None:
-    """Search Allegro, evaluate the best matches and print a report."""
+    """Search Allegro via web scraping, evaluate the best matches and print a report."""
     settings = _load_settings(config_file)
     if max_results is not None:
         settings.top_k = max_results
@@ -87,6 +191,8 @@ def search(
     log.info("criteria_parsed", criteria=criteria.model_dump())
 
     try:
+        from allegro_evaluate.scraper import AllegroScraper, ScraperError
+
         scraper = AllegroScraper(settings, logger=log)
         listings = scraper.scrape(criteria.query)
     except ScraperError as exc:
@@ -121,7 +227,7 @@ def config_show(
         None, "--config", help="Path to a TOML config file to display instead of the defaults."
     ),
 ) -> None:
-    """Display the current settings (API key masked)."""
+    """Display the current settings (API keys masked)."""
     settings = _load_settings(config_file)
     console = Console()
 
@@ -129,10 +235,13 @@ def config_show(
     table.add_column("Key", style="bold")
     table.add_column("Value")
     table.add_row("OpenRouter API key", mask_key(settings.openrouter_api_key))
-    table.add_row("Base URL", settings.base_url)
+    table.add_row("OpenRouter Base URL", settings.base_url)
     table.add_row("Primary model", settings.primary_model)
     table.add_row("Fallback models", ", ".join(settings.fallback_models))
     table.add_row("Stage-1 model", settings.stage1_model or f"(default: {settings.fallback_models[0]})")
+    table.add_row("Allegro Client ID", mask_key(settings.allegro_client_id))
+    table.add_row("Allegro Client Secret", mask_key(settings.allegro_client_secret))
+    table.add_row("Allegro API Base", settings.allegro_api_base)
     table.add_row("Max listings", str(settings.max_listings))
     table.add_row("Max pages", str(settings.max_pages))
     table.add_row("Top K", str(settings.top_k))
@@ -202,7 +311,7 @@ def _render_markdown(report: SearchReport) -> None:
     lines = [
         f"# Best matches for: {report.query}",
         "",
-        f"- Listings scraped: **{report.total_listings}**",
+        f"- Listings fetched: **{report.total_listings}**",
         f"- Models used: {', '.join(report.models_used) or '—'}",
         "",
     ]
@@ -260,7 +369,7 @@ def _render_table(report: SearchReport) -> None:
         )
     console.print(table)
     console.print(
-        f"[dim]Listings scraped: {report.total_listings} · "
+        f"[dim]Listings fetched: {report.total_listings} · "
         f"Models: {', '.join(report.models_used) or 'n/a'}[/dim]"
     )
 

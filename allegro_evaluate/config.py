@@ -62,6 +62,11 @@ class Settings(BaseSettings):
         description="Cheap model for stage-1 filtering; defaults to fallback_models[0]",
     )
 
+    # --- Allegro API ------------------------------------------------------
+    allegro_client_id: str = Field(default="", description="Allegro API client ID")
+    allegro_client_secret: str = Field(default="", description="Allegro API client secret")
+    allegro_api_base: str = Field(default="https://api.allegro.pl", description="Allegro API base URL")
+
     # --- Pipeline ---------------------------------------------------------
     max_listings: int = Field(default=50, ge=1, description="Maximum listings to scrape")
     top_k: int = Field(default=3, ge=1, description="How many best matches to return")
