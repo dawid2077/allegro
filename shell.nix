@@ -56,6 +56,7 @@ pkgs.mkShell {
     fi
 
     echo "allegro-evaluate dev shell ready (using uv)"
+    echo "Run: uv sync"
     echo "Run: allegro-evaluate --help"
   '';
 }
