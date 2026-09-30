@@ -75,7 +75,7 @@ def parse_price_from_text(text: str) -> float | None:
     """
     if not text:
         return None
-    normalized = text.replace(" ", " ").replace(" ", " ")
+    normalized = text.replace(" ", " ")
 
     explicit = _PLN_RE.search(normalized)
     target = explicit if explicit else _NUMBER_RE.search(normalized)
