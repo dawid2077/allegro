@@ -124,7 +124,10 @@ class AllegroAPIClient:
     def _parse_listings(self, data: dict[str, Any]) -> list[Listing]:
         """Parse Allegro API response into Listing objects."""
         listings: list[Listing] = []
-        for item in data.get("items", {}).get("promoted", []) + data.get("items", {}).get("regular", []):
+        items = data.get("items", {})
+        if not isinstance(items, dict):
+            items = {}
+        for item in items.get("promoted", []) + items.get("regular", []):
             try:
                 listing = self._item_to_listing(item)
                 if listing:

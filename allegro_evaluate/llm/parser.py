@@ -73,7 +73,10 @@ class QueryParser:
         if not isinstance(data, dict):
             raise ValueError("parser returned non-object JSON")
         # Be lenient about key naming/casing from weaker models.
-        normalized: dict[str, object] = {k.lower().strip(): v for k, v in data.items()}
+        normalized: dict[str, object] = {}
+        for k, v in data.items():
+            if isinstance(k, str):
+                normalized[k.lower().strip()] = v
         return SearchCriteria(
             query=str(normalized.get("query") or raw_query).strip(),
             must_have=_as_str_list(normalized.get("must_have")),

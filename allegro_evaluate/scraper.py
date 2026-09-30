@@ -258,7 +258,7 @@ class AllegroScraper:
         img_el = element.query_selector(IMAGE_SELECTOR)
         if img_el is not None:
             image_url = img_el.get_attribute("src") or img_el.get_attribute("data-src")
-        if image_url and image_url.startswith("//"):
+        if image_url and isinstance(image_url, str) and image_url.startswith("//"):
             image_url = "https:" + image_url
 
         return Listing(

@@ -182,7 +182,8 @@ def _extract_content(data: dict[str, Any], model: str) -> str:
             return content
     except (KeyError, IndexError, TypeError):
         pass
-    raise LLMStatusError(200, f"{model}: empty or unexpected response body: {data!r:.200}", retryable=False)
+    data_str = repr(data)[:200]
+    raise LLMStatusError(200, f"{model}: empty or unexpected response body: {data_str}", retryable=False)
 
 
 def _error_message(data: dict[str, Any]) -> str:
